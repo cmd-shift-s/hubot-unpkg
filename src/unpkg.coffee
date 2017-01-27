@@ -19,8 +19,6 @@ channel = process.env.HUBOT_UNPKG_NOTICE_CHANNEL or '#general'
 noticeMessage = process.env.HUBOT_UNPKG_NOTICE_MESSAGE or '{0} was updated {1}'
 interval = parseInt(process.env.HUBOT_UNPKG_WATCH_INTERVAL or '6000000')
 
-if interval <
-
 String::format = ->
   args = arguments
   return @replace /\{(\d)\}/g, ->
