@@ -1,0 +1,24 @@
+{
+  "name": "hubot-unpkg",
+  "version": "1.0.0",
+  "description": "Get package's unpkg url of latest version",
+  "main": "index.coffee",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gongzza/hubot-unpkg.git"
+  },
+  "keywords": [
+    "hubot",
+    "unpkg"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gongzza/hubot-unpkg/issues"
+  },
+  "homepage": "https://github.com/gongzza/hubot-unpkg#readme",
+  "dependencies": {}
+}
