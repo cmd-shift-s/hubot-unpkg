@@ -11,8 +11,6 @@
 #   unpkg package - will get package's unpkg url of latest version
 #   unpkg package -v, --version - will get package version
 
-https = require 'https'
-
 url = 'https://unpkg.com'
 
 channel = process.env.HUBOT_UNPKG_NOTICE_CHANNEL or '#general'
@@ -75,9 +73,9 @@ module.exports = (robot) ->
             robot.messageRoom channel, noticeMessage.format pkgName, version.substring 1
           robot.brain.set pkgName, version
 
-getUrl = (pkgName, cb) ->
-  https.get "#{url}/#{pkgName}", (res) ->
-    if res.statusCode is 302
-      cb res.headers.location
-    else
-      cb null
+  getUrl = (pkgName, cb) ->
+    robot.http("#{url}/#{pkgName}").get() (err, res) ->
+      if res.statusCode is 302
+        cb res.headers.location
+      else
+        cb null
