@@ -5,16 +5,20 @@
 # Configuration:
 #   HUBOT_UNPKG_NOTICE_CHANNEL {String} [#general]
 #   HUBOT_UNPKG_NOTICE_MESSAGE {String} - {0}: pakcage name, {1}: packageName@version
-#   HUBOT_UNPKG_WATCH_INTERVAL {Number} [10 * 60 * 1000] - interval
+#   HUBOT_UNPKG_WATCH_INTERVAL {Number} [10 * 60 * 1000] - interval, 0: disable
+#   HUBOT_UNPKG_WATCH_LIST {String} - watch default package list
+#                                     ex) vue,vuex,vue-router
 #
 # Commands:
-#   unpkg package - will get package's unpkg url of latest version
-#   unpkg package -v, --version - will get package version
+#   unpkg package - get package's unpkg url of latest version
+#   unpkg package -l, --list - return watching package list
+#   unpkg package -v, --version - get package version
+#   unpkg all -v, --version - get all watching packages version
 
 url = 'https://unpkg.com'
 
 channel = process.env.HUBOT_UNPKG_NOTICE_CHANNEL or '#general'
-noticeMessage = process.env.HUBOT_UNPKG_NOTICE_MESSAGE or '{0} was updated {1}'
+noticeMessage = process.env.HUBOT_UNPKG_NOTICE_MESSAGE or '{0} was updated : {1}'
 interval = parseInt(process.env.HUBOT_UNPKG_WATCH_INTERVAL or '6000000')
 
 String::format = ->
@@ -28,26 +32,45 @@ module.exports = (robot) ->
     pkgs = new Set
     robot.brain.set 'pkgs', pkgs
 
-  watchIntervalId = setInterval =>
-    watchPackages()
-  , interval
+  # add default packages
+  watchlist = process.env.HUBOT_UNPKG_WATCH_LIST or null
+  if watchlist isnt null
+    list = watchlist.split /[,\s]+/
+    for i of list
+      pkgs.add list[i]
+    process.nextTick ->
+      watchPackages()
+
+  # watching setInterval
+  if interval
+    watchIntervalId = setInterval =>
+      watchPackages()
+    , interval
 
   robot.hear /^unpkg (.*)$/i, (msg) ->
     pkgName = msg.match[1]
-    return if /(-v|--version)$/i.test pkgName
+    return if /(-v|--version)$/i.test(pkgName) or /(-l|--list)$/i.test(pkgName)
     getVersion pkgName, (version) ->
       if version
         msg.send "#{url}#{version}"
       else
         msg.send "Not found #{pkgName}"
 
+  robot.hear /^unpkg (-l|--list)$/i, (msg) ->
+    msg.send 'unpkg watch list: ' + Array.from(pkgs).join ', '
+
   robot.hear /^unpkg (.*) (-v|--version)$/i, (msg) ->
     pkgName = msg.match[1]
-    getVersion pkgName, (version) ->
-      if version
-        msg.send version.substring 1
-      else
-        msg.send "Not found #{pkgName}"
+    if /^all$/i.test pkgName
+      pkgs.forEach (pkg) ->
+        getVersion pkg, (version) ->
+          msg.send version.substring 1
+    else
+      getVersion pkgName, (version) ->
+        if version
+          msg.send version.substring 1
+        else
+          msg.send "Not found #{pkgName}"
 
   getVersion = (pkgName, cb) ->
     pkg = robot.brain.get pkgName
