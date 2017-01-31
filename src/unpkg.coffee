@@ -5,13 +5,13 @@
 # Configuration:
 #   HUBOT_UNPKG_NOTICE_CHANNEL {String} [#general]
 #   HUBOT_UNPKG_NOTICE_MESSAGE {String} - {0}: pakcage name, {1}: packageName@version
-#   HUBOT_UNPKG_WATCH_INTERVAL {Number} [10 * 60 * 1000] - interval, 0: disable
+#   HUBOT_UNPKG_WATCH_INTERVAL {Number} [0] - interval, 0: disable
 #   HUBOT_UNPKG_WATCH_LIST {String} - watch default package list
 #                                     ex) vue,vuex,vue-router
 #
 # Commands:
 #   unpkg package - get package's unpkg url of latest version
-#   unpkg package -l, --list - return watching package list
+#   unpkg -l, --list - return searched all packages
 #   unpkg package -v, --version - get package version
 #   unpkg all -v, --version - get all watching packages version
 
@@ -19,7 +19,7 @@ url = 'https://unpkg.com'
 
 channel = process.env.HUBOT_UNPKG_NOTICE_CHANNEL or '#general'
 noticeMessage = process.env.HUBOT_UNPKG_NOTICE_MESSAGE or '{0} was updated : {1}'
-interval = parseInt(process.env.HUBOT_UNPKG_WATCH_INTERVAL or '6000000')
+interval = parseInt(process.env.HUBOT_UNPKG_WATCH_INTERVAL or '0')
 
 String::format = ->
   args = arguments
@@ -57,7 +57,7 @@ module.exports = (robot) ->
         msg.send "Not found #{pkgName}"
 
   robot.hear /^unpkg (-l|--list)$/i, (msg) ->
-    msg.send 'unpkg watch list: ' + Array.from(pkgs).join ', '
+    msg.send 'list: ' + Array.from(pkgs).join ', '
 
   robot.hear /^unpkg (.*) (-v|--version)$/i, (msg) ->
     pkgName = msg.match[1]
@@ -74,7 +74,7 @@ module.exports = (robot) ->
 
   getVersion = (pkgName, cb) ->
     pkg = robot.brain.get pkgName
-    if pkg
+    if pkg and interval isnt 0
       cb pkg
     else
       getUrl pkgName, (version) ->
@@ -82,7 +82,6 @@ module.exports = (robot) ->
           if !pkgs.has pkgName
             pkgs.add pkgName
             robot.brain.set 'pkgs', pkgs
-
           robot.brain.set pkgName, version
           cb version
         else
