@@ -41,12 +41,6 @@ module.exports = (robot) ->
     process.nextTick ->
       watchPackages()
 
-  # watching setInterval
-  if interval
-    watchIntervalId = setInterval =>
-      watchPackages()
-    , interval
-
   robot.hear /^unpkg (.*)$/i, (msg) ->
     pkgName = msg.match[1]
     return if /(-v|--version)$/i.test(pkgName) or /(-l|--list)$/i.test(pkgName)
@@ -94,6 +88,11 @@ module.exports = (robot) ->
           if robot.brain.get(pkgName) isnt null
             robot.messageRoom channel, noticeMessage.format pkgName, version.substring 1
           robot.brain.set pkgName, version
+
+    if interval
+      setTimeout ->
+        watchPackages()
+      , interval
 
   getUrl = (pkgName, cb) ->
     robot.http("#{url}/#{pkgName}").get() (err, res) ->
